@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>CogniStream Ultra | AI Data Lake</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background: #020617; color: white; font-family: 'Plus Jakarta Sans', sans-serif; overflow-x: hidden; }
+        .glass { background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.08); }
+        .stat-card { background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(16, 185, 129, 0.1) 100%); }
+        .file-entry:hover { border-color: #3b82f6; background: rgba(59, 130, 246, 0.05); cursor: pointer; }
+        .priority-high-priority { border-left: 4px solid #ef4444 !important; }
+        .priority-stable { border-left: 4px solid #3b82f6 !important; }
+        .priority-low-priority { border-left: 4px solid #64748b !important; }
+        
+        /* Modal Animation */
+        #previewModal { display: none; transition: opacity 0.3s ease; }
+
+        /* Auth Overlay */
+        #authOverlay { position: fixed; inset: 0; z-index: 100; display: flex; align-items: center; justify-content: center; background: #020617; }
+        #mainApp { display: none; }
+    </style>
+</head>
+<body class="p-6 md:p-12">
+
+    <div id="authOverlay">
+        <div class="glass max-w-md w-full rounded-[3rem] p-10 border border-blue-500/20 shadow-2xl">
+            <div id="loginSection">
+                <h2 class="text-3xl font-black mb-2 bg-gradient-to-r from-blue-400 to-emerald-400 bg-clip-text text-transparent uppercase italic">Sentinel Login</h2>
+                <p class="text-slate-500 text-[10px] mb-8 uppercase tracking-[0.2em] font-mono">Verify identity to access stream</p>
+                <input type="text" id="l-user" placeholder="Username" class="w-full bg-slate-900/50 border border-slate-800 rounded-2xl px-6 py-4 mb-4 outline-none focus:border-blue-500 text-sm transition-all">
+                <input type="password" id="l-pass" placeholder="Password" class="w-full bg-slate-900/50 border border-slate-800 rounded-2xl px-6 py-4 mb-8 outline-none focus:border-blue-500 text-sm transition-all">
+                <button onclick="handleLogin()" class="w-full py-4 bg-blue-600 hover:bg-blue-500 rounded-2xl font-black tracking-widest transition-all mb-4 uppercase text-xs">Authorize Access</button>
+                <p class="text-center text-[10px] text-slate-500 font-bold uppercase">New Agent? <button onclick="toggleAuth(true)" class="text-emerald-400 hover:underline">Register Sentinel</button></p>
+            </div>
+
+            <div id="signupSection" class="hidden">
+                <h2 class="text-3xl font-black mb-2 bg-gradient-to-r from-emerald-400 to-blue-400 bg-clip-text text-transparent uppercase italic">Register</h2>
+                <p class="text-slate-500 text-[10px] mb-6 uppercase tracking-[0.2em] font-mono">Initialize your private data lake</p>
+                <div class="space-y-3">
+                    <input type="email" id="s-email" placeholder="Email Address" class="w-full bg-slate-900/50 border border-slate-800 rounded-xl px-5 py-3 outline-none focus:border-emerald-500 text-sm">
+                    <input type="text" id="s-user" placeholder="Username" class="w-full bg-slate-900/50 border border-slate-800 rounded-xl px-5 py-3 outline-none focus:border-emerald-500 text-sm">
+                    <input type="password" id="s-pass" placeholder="Password" class="w-full bg-slate-900/50 border border-slate-800 rounded-xl px-5 py-3 outline-none focus:border-emerald-500 text-sm">
+                    <input type="text" id="s-phone" placeholder="Phone Number" class="w-full bg-slate-900/50 border border-slate-800 rounded-xl px-5 py-3 outline-none focus:border-emerald-500 text-sm">
+                </div>
+                <button onclick="handleSignup()" class="w-full py-4 bg-emerald-600 hover:bg-emerald-500 rounded-2xl font-black tracking-widest transition-all mt-6 mb-4 uppercase text-xs">Initialize Lake</button>
+                <p class="text-center text-[10px] text-slate-500 font-bold uppercase">Already Registered? <button onclick="toggleAuth(false)" class="text-blue-400 hover:underline">Return to Login</button></p>
+            </div>
+            <p id="authMsg" class="text-[10px] mt-4 text-center font-bold uppercase tracking-tighter"></p>
+        </div>
+    </div>
+
+    <div id="mainApp">
+        <div id="previewModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl">
+            <div class="glass max-w-5xl w-full rounded-[2.5rem] p-8 relative border border-white/10">
+                <button onclick="closePreview()" class="absolute top-6 right-6 w-12 h-12 flex items-center justify-center rounded-full bg-white/5 hover:bg-red-500/20 hover:text-red-500 transition-all text-2xl">&times;</button>
+                <div id="previewContent" class="mt-4 flex flex-col items-center min-h-[40vh] justify-center">
+                    </div>
+            </div>
+        </div>
+
+        <div class="max-w-7xl mx-auto">
+            <header class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-12">
+                <div>
+                    <h1 class="text-6xl font-black tracking-tighter bg-gradient-to-r from-blue-400 via-indigo-400 to-emerald-400 bg-clip-text text-transparent">COGNISTREAM PRO</h1>
+                    <div class="flex items-center gap-4 mt-2">
+                        <p id="sentinelID" class="text-emerald-400 font-mono text-xs uppercase tracking-[0.3em]">AI-Enriched Cloud Storage Hub</p>
+                        <button onclick="exportManifest()" class="text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-3 py-1 rounded-full font-bold hover:bg-emerald-500 hover:text-white transition-all uppercase tracking-widest">Export Manifest</button>
+                        <button onclick="logout()" class="text-[10px] bg-red-500/10 text-red-400 border border-red-500/20 px-3 py-1 rounded-full font-bold hover:bg-red-500 hover:text-white transition-all uppercase tracking-widest">Logout</button>
+                    </div>
+                </div>
+                <div class="flex gap-4 w-full lg:w-auto">
+                    <div class="glass stat-card px-6 py-4 rounded-3xl border border-blue-500/20 flex-1 lg:flex-none">
+                        <p class="text-[10px] font-bold text-blue-400 uppercase tracking-widest">Storage Used</p>
+                        <p class="text-2xl font-black" id="totalSize">0.0 KB</p>
+                    </div>
+                    <div class="glass stat-card px-6 py-4 rounded-3xl border-emerald-500/20 flex-1 lg:flex-none">
+                        <p class="text-[10px] font-bold text-emerald-400 uppercase tracking-widest">Sentinel Guard</p>
+                        <p class="text-2xl font-black text-emerald-400">ACTIVE</p>
+                    </div>
+                    <div class="glass stat-card px-6 py-4 rounded-3xl border-emerald-500/20 flex-1 lg:flex-none">
+                        <p class="text-[10px] font-bold text-emerald-400 uppercase tracking-widest">Active Assets</p>
+                        <p class="text-2xl font-black" id="fileCount">0</p>
+                    </div>
+                </div>
+            </header>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-10">
+                <div class="lg:col-span-4 space-y-6">
+                    <div class="glass p-8 rounded-[2.5rem]">
+                        <h2 class="text-xl font-bold mb-6 flex items-center gap-2"><span>⚡</span> Fast Ingest</h2>
+                        <input type="file" id="fileIn" class="hidden" multiple>
+                        <label for="fileIn" class="block border-2 border-dashed border-slate-700 rounded-3xl p-10 text-center cursor-pointer hover:border-blue-500 transition-all group">
+                            <div class="text-5xl mb-3 group-hover:scale-110 transition-transform">🛰️</div>
+                            <p class="font-bold text-slate-200">Broadcast File</p>
+                            <p class="text-[10px] text-slate-500 mt-1 uppercase tracking-tighter">GIF, PDF, DOCX, JPG supported</p>
+                        </label>
+                    </div>
+
+                    <div class="glass p-8 rounded-[2.5rem]">
+                        <h2 class="text-sm font-bold text-slate-400 mb-4 uppercase tracking-widest">Quick Filters</h2>
+                        <div class="flex flex-wrap gap-2">
+                            <button class="px-4 py-2 rounded-xl bg-blue-500/20 text-blue-400 border border-blue-500/20 text-xs font-bold filter-btn">ALL</button>
+                            <button class="px-4 py-2 rounded-xl bg-slate-800/50 text-slate-500 border border-slate-800 text-xs font-bold filter-btn">PDF</button>
+                            <button class="px-4 py-2 rounded-xl bg-slate-800/50 text-slate-500 border border-slate-800 text-xs font-bold filter-btn">DOCX</button>
+                            <button class="px-4 py-2 rounded-xl bg-slate-800/50 text-slate-500 border border-slate-800 text-xs font-bold filter-btn">GIF</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="lg:col-span-8">
+                    <div class="flex items-center gap-4 mb-6">
+                        <div class="flex-1 glass px-6 py-4 rounded-2xl flex items-center gap-3">
+                            <span>🔍</span>
+                            <input type="text" id="searchInput" placeholder="Search by name or AI tag (e.g. 'Important')..." class="bg-transparent border-none outline-none w-full text-sm placeholder:text-slate-600">
+                        </div>
+                    </div>
+
+                    <div id="bucketExplorer" class="space-y-4">
+                        <div class="text-center py-20 opacity-20">
+                            <p class="text-5xl mb-4">🛸</p>
+                            <p class="font-bold">Awaiting Data Streams...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- AUTH & PERSISTENCE FEATURE ---
+        let currentSentinel = null;
+        let storedFiles = [];
+
+        function toggleAuth(showSignup) {
+            document.getElementById('loginSection').classList.toggle('hidden', showSignup);
+            document.getElementById('signupSection').classList.toggle('hidden', !showSignup);
+            document.getElementById('authMsg').innerText = '';
+        }
+
+        function handleSignup() {
+            const user = document.getElementById('s-user').value.trim();
+            const pass = document.getElementById('s-pass').value.trim();
+            const email = document.getElementById('s-email').value.trim();
+            const phone = document.getElementById('s-phone').value.trim();
+
+            if(!user || !pass || !email) {
+                authStatus("Credentials required!", true);
+                return;
+            }
+
+            let db = JSON.parse(localStorage.getItem('cogni_db') || '{}');
+            if(db[user]) {
+                authStatus("Username taken!", true);
+                return;
+            }
+
+            db[user] = { pass, email, phone, files: [] };
+            localStorage.setItem('cogni_db', JSON.stringify(db));
+            authStatus("Lake Initialized! Please login.", false);
+            setTimeout(() => toggleAuth(false), 1000);
+        }
+
+        function handleLogin() {
+            const user = document.getElementById('l-user').value.trim();
+            const pass = document.getElementById('l-pass').value.trim();
+            let db = JSON.parse(localStorage.getItem('cogni_db') || '{}');
+
+            if(db[user] && db[user].pass === pass) {
+                currentSentinel = user;
+                storedFiles = db[user].files || [];
+                document.getElementById('authOverlay').style.display = 'none';
+                document.getElementById('mainApp').style.display = 'block';
+                document.getElementById('sentinelID').innerText = `SENTINEL: ${user.toUpperCase()}`;
+                renderFiles();
+            } else {
+                authStatus("Access Denied: Invalid Credentials", true);
+            }
+        }
+
+        function logout() {
+            location.reload(); // Hard reset for security
+        }
+
+        function authStatus(msg, isErr) {
+            const el = document.getElementById('authMsg');
+            el.innerText = msg;
+            el.style.color = isErr ? '#f87171' : '#10b981';
+        }
+
+        function syncDB() {
+            if(!currentSentinel) return;
+            let db = JSON.parse(localStorage.getItem('cogni_db') || '{}');
+            db[currentSentinel].files = storedFiles;
+            localStorage.setItem('cogni_db', JSON.stringify(db));
+        }
+
+        // --- ORIGINAL APP LOGIC ---
+        const fileIn = document.getElementById('fileIn');
+        const explorer = document.getElementById('bucketExplorer');
+        const fileCountEl = document.getElementById('fileCount');
+        const totalSizeEl = document.getElementById('totalSize');
+        const searchInput = document.getElementById('searchInput');
+        const filterButtons = document.querySelectorAll('.filter-btn');
+        const modal = document.getElementById('previewModal');
+        const previewContent = document.getElementById('previewContent');
+
+        const SUPPORTED_TYPES = ['pdf', 'docx', 'jpg', 'png', 'gif', 'txt'];
+        let currentFilter = 'ALL';
+        let searchTerm = '';
+
+        fileIn.onchange = (e) => {
+            const files = Array.from(e.target.files);
+            files.forEach(file => {
+                const ext = file.name.split('.').pop().toLowerCase();
+                if (!SUPPORTED_TYPES.includes(ext)) {
+                    alert(`🚨 ERROR: File type ".${ext}" is not supported.`);
+                    return;
+                }
+                const blobURL = URL.createObjectURL(file);
+                const iconMap = { pdf: '📕', docx: '📝', jpg: '🖼️', png: '🎨', gif: '🎬', txt: '📄' };
+                const isHigh = /urgent|invoice|contract|critical|important|imp|hallticket|result/i.test(file.name);
+                const isLow = /draft|temp|test/i.test(file.name);
+                const priority = isHigh ? 'HIGH_PRIORITY' : (isLow ? 'LOW_PRIORITY' : 'STABLE');
+                const fingerprint = `SENTINEL-${Math.random().toString(16).toUpperCase().slice(2, 8)}`;
+
+                storedFiles.push({
+                    id: Math.random().toString(36).substr(2, 9),
+                    name: file.name,
+                    size: (file.size / 1024).toFixed(1),
+                    ext: ext.toUpperCase(),
+                    tags: [ext.toUpperCase(), priority.replace('_', ' '), 'AI_VERIFIED'],
+                    icon: iconMap[ext] || '📄',
+                    priority: priority.toLowerCase().replace('_', '-'),
+                    fingerprint: fingerprint,
+                    url: blobURL
+                });
+            });
+            syncDB();
+            renderFiles();
+        };
+
+        function renderFiles() {
+            explorer.innerHTML = '';
+            const filtered = storedFiles.filter(f => {
+                const matchesSearch = f.name.toLowerCase().includes(searchTerm) || 
+                                      f.tags.some(t => t.toLowerCase().includes(searchTerm));
+                const matchesFilter = (currentFilter === 'ALL') || (f.ext === currentFilter);
+                return matchesSearch && matchesFilter;
+            });
+
+            if (filtered.length === 0) {
+                explorer.innerHTML = `<div class="text-center py-10 opacity-30"><p>No streams match your query.</p></div>`;
+            }
+
+            filtered.forEach(f => {
+                const entry = document.createElement('div');
+                entry.className = `glass p-6 rounded-3xl border border-slate-800 flex items-center justify-between file-entry transition-all mb-4 priority-${f.priority}`;
+                entry.innerHTML = `
+                    <div class="flex items-center gap-6 flex-1" onclick="openPreview('${f.id}')">
+                        <div class="text-3xl bg-slate-900 p-4 rounded-2xl relative">
+                            ${f.icon}
+                            ${f.priority === 'high-priority' ? '<span class="absolute -top-1 -right-1 flex h-3 w-3"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span><span class="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span></span>' : ''}
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-3">
+                                <h3 class="font-bold text-slate-100">${f.name}</h3>
+                                <span class="text-[8px] bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded border border-emerald-500/20 font-mono italic">${f.fingerprint}</span>
+                            </div>
+                            <div class="flex gap-2 mt-2">
+                                ${f.tags.map(t => {
+                                    const color = t.includes('HIGH') ? 'text-red-400 bg-red-400/10 border-red-400/20' : 'text-blue-400 bg-blue-400/10 border-blue-400/20';
+                                    return `<span class="text-[9px] px-2 py-0.5 rounded border font-bold uppercase ${color}">${t}</span>`
+                                }).join('')}
+                                <span class="text-[9px] bg-slate-800 text-slate-500 px-2 py-0.5 rounded border border-slate-700 font-bold">${f.size} KB</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex gap-2 ml-4">
+                        <a href="${f.url}" download="${f.name}" class="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center hover:bg-emerald-500/20 text-emerald-400 transition-colors">⬇️</a>
+                        <button onclick="deleteFile('${f.id}')" class="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center hover:bg-red-500/20 text-red-500 transition-colors">🗑️</button>
+                    </div>`;
+                explorer.appendChild(entry);
+            });
+
+            fileCountEl.innerText = filtered.length;
+            const totalSize = filtered.reduce((acc, curr) => acc + parseFloat(curr.size), 0);
+            totalSizeEl.innerText = `${totalSize.toFixed(1)} KB`;
+        }
+
+        window.openPreview = (id) => {
+            const file = storedFiles.find(f => f.id === id);
+            previewContent.innerHTML = `<h2 class="text-3xl font-black mb-8 text-blue-400 tracking-tight">${file.name}</h2>`;
+            if (['JPG', 'PNG', 'GIF'].includes(file.ext)) {
+                previewContent.innerHTML += `<img src="${file.url}" class="max-h-[65vh] rounded-[2rem] border-4 border-white/5 shadow-2xl">`;
+            } else if (file.ext === 'PDF') {
+                previewContent.innerHTML += `<iframe src="${file.url}" class="w-full h-[65vh] rounded-[2rem] border border-white/10"></iframe>`;
+            } else {
+                previewContent.innerHTML += `<div class="text-center p-16 bg-slate-900/50 rounded-[3rem] border-2 border-dashed border-slate-700 w-full"><p class="text-7xl mb-6">📄</p><p class="text-xl text-slate-300 font-bold italic">Deep Cognitive Content View</p></div>`;
+            }
+            modal.style.display = 'flex';
+        };
+
+        window.closePreview = () => { modal.style.display = 'none'; };
+
+        window.exportManifest = () => {
+            if (storedFiles.length === 0) return alert("Data Lake is empty.");
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(storedFiles, null, 2));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", `${currentSentinel}_manifest.json`);
+            downloadAnchor.click();
+        };
+
+        searchInput.oninput = (e) => {
+            searchTerm = e.target.value.toLowerCase();
+            renderFiles();
+        };
+
+        filterButtons.forEach(btn => {
+            btn.onclick = () => {
+                filterButtons.forEach(b => {
+                    b.classList.remove('bg-blue-500/20', 'text-blue-400');
+                    b.classList.add('bg-slate-800/50', 'text-slate-500');
+                });
+                btn.classList.add('bg-blue-500/20', 'text-blue-400');
+                btn.classList.remove('bg-slate-800/50', 'text-slate-500');
+                currentFilter = btn.innerText;
+                renderFiles();
+            };
+        });
+
+        window.deleteFile = (id) => {
+            storedFiles = storedFiles.filter(f => f.id !== id);
+            syncDB();
+            renderFiles();
+        };
+    </script>
+</body>
+</html>
