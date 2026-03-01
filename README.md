@@ -26,7 +26,8 @@ This application is a **Single-File Application (SFA)** that operates entirely w
 #### System Flow Diagram
 The flowchart below illustrates the data lifecycle from **Identity Verification** to **Asset Management**.
 
-![CogniStream Pro System Logic Flowchart]([https://raw.githubusercontent.com/YourUsername/YourRepoName/main/flowchart.png](https://img.plantuml.biz/plantuml/png/ZLLDR-8m4BqZyH_cIAJkzauFBSj7nIvGr42bbP2GIGRYhMD7jWDbV_sEdO-6KAJb00I_UUDvysPuCfPfcwUYsx7S2eIXEaWUMeqiXQLMy0t2ix6OmaIeKxVJxVY0RgS_KonkenySWE-X5w8nN4aOVt1ZpMC0Da49lTzeWcu7w5M4BpK_CeimOfR16yk59GOK1g6tK1LoaDi4Newe1Jl38BByY0_5KV5Uv1COMN-gP9Kjv0UPPoMDfvhABBSmJXaNTx0sg2LByMuZbyoOazBn7ImJ9IlwYhm2jgif7XlyFaUOg1ECjLQwlv5rw8gzespmbaNYoL-ZpJ5KQSejLCTWrKP6Jkfjl8FUJ4LCX5PfTi2WoIbZlczKUrku8ljC7RYybgVM1IfPMdeCDSOeBMV2KDC4Zsj5_5ExcAda3il_8fIsg8g9Sgs9Q6kAdnzQWRSjSgdYL1w_odlHY44KKH8OeUGOVwrP-RNy88VF6PUKroGxnNIyaUGogbgYACKClDrF2QUnyIOf_VSOjEqvbGSq5YQ4l1u5Vrbt1EjCk9AFdC644RuCcx4TYbOFF7vrpaZJFCkKjlZPXVgNAqLucWidvc0A0yd4sN3J5lqP9Mg7gOkTSBg6pZINjWqcXwbl8xHkzgXHIdDx9fqMpl6_yEoyOu9sq519ycIX1ZaRVWYrW_Nhh8rRvYQ1ELeMkzOJC2U9smxmo7KMknlN4q9jQyx8bM7MqjoKo9bc8EX-P9fFaHVAVWfzmpv4NQmYfgC4xbrzzcAqo_bQeKxfk5nP1Qf1sNybKlBIBe_UqOu_o1Ew1bH9Xe97xuMV6f7Z3uno4a9bA9SQZnnFlQRyVTSgdL9NuOtEV6dKBhxNrB1xdXxkBNxOYuYvYbdbTu8-2re9gT9PmatgIOBMpKRg99sBc_TQQNuW2y62EHge81lfdDvgVyr3yjWlgulzYQlzihZ_Sq75Jy9ICs7E9D_Ja3KJXQZBVMKe56ENoZW3_WnV5XToreNavSxS-kp6_o5kZywht_-OUhDLkLU-2SMG-SqNNBG_LSUgZDiRagwMNUmjlxdyCdBVd-Y1_jN_0G00)) **
+<img width="998" height="1128" alt="image" src="https://github.com/user-attachments/assets/192aa026-4339-43ad-bf52-40bbb102ece9" />
+
 
 #### Core Tech Stack
 * **Structure & Logic:** HTML5, Vanilla JavaScript (ES6+)
